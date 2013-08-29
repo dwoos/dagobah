@@ -84,6 +84,9 @@ class DagobahTask(Base):
     job_id = Column(Integer, ForeignKey('dagobah_job.id'), index=True)
     name = Column(String(1000), nullable=False)
     command = Column(String(1000), nullable=False)
+    task_target = Column(String(1000))
+    task_target_key = Column(String(1000))
+    task_target_password = Column(String(1000))
     started_at = Column(DateTime)
     completed_at = Column(DateTime)
     success = Column(String(30))
@@ -107,12 +110,16 @@ class DagobahTask(Base):
                 'completed_at': self.completed_at,
                 'success': self.success,
                 'soft_timeout': self.soft_timeout,
-                'hard_timeout': self.hard_timeout}
+                'hard_timeout': self.hard_timeout,
+                'task_target': self.task_target,
+                'task_target_key': self.task_target_key,
+                'task_target_password': self.task_target_password}
 
     def update_from_dict(self, data):
         for key in ['job_id', 'name', 'command', 'started_at',
                     'completed_at', 'success', 'soft_timeout',
-                    'hard_timeout']:
+                    'hard_timeout', 'task_target', 'task_target_key', 
+                    'task_target_password']:
             if key in data:
                 setattr(self, key, data[key])
 
