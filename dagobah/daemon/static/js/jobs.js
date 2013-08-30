@@ -73,6 +73,9 @@ function bindEvents() {
 	$('.submit-on-enter').off('keydown', submitOnEnter);
 	$('.submit-on-enter').on('keydown', submitOnEnter);
 
+	// $('.job-export').off('click', onJobExportClick);
+	// $('.job-export').on('click', onJobExportClick);
+
 }
 
 function changeJobName(jobName, newName) {
@@ -150,7 +153,8 @@ function resetJobsTable() {
 			jobsTableTemplate({
 				jobName: thisJob.name,
 				jobStatus: thisJob.status,
-				jobURL: $SCRIPT_ROOT + '/job/' + thisJob.job_id
+				jobURL: $SCRIPT_ROOT + '/job/' + thisJob.job_id,
+				exportURL: $SCRIPT_ROOT + '/api/export_job?job_name=' + thisJob.name
 			})
 		);
 	}

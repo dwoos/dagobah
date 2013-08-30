@@ -5,11 +5,12 @@ from datetime import datetime
 import time
 import threading
 import subprocess
+import json
 
 from croniter import croniter
 
 from dagobah.core.dag import DAG
-from dagobah.core.components import Scheduler, JobState
+from dagobah.core.components import Scheduler, JobState, StrictJSONEncoder
 from dagobah.backend.base import BaseBackend
 
 
@@ -66,7 +67,6 @@ class Dagobah(object):
             raise DagobahError('dagobah with id %s does not exist in backend' %
                                dagobah_id)
 
-        # delete current version of this Dagobah instance
         self.delete()
 
         for required_key in ['dagobah_id', 'created_jobs']:
@@ -175,12 +175,16 @@ class Dagobah(object):
                 else True)
 
 
-    def _serialize(self, include_run_logs=False):
+    def _serialize(self, include_run_logs=False, strict_json=False):
         """ Serialize a representation of this Dagobah object to JSON. """
-        return {'dagobah_id': self.dagobah_id,
-                'created_jobs': self.created_jobs,
-                'jobs': [job._serialize(include_run_logs=include_run_logs)
-                         for job in self.jobs]}
+        result = {'dagobah_id': self.dagobah_id,
+                  'created_jobs': self.created_jobs,
+                  'jobs': [job._serialize(include_run_logs=include_run_logs,
+                                          strict_json=strict_json)
+                           for job in self.jobs]}
+        if strict_json:
+            result = json.loads(json.dumps(result, cls=StrictJSONEncoder))
+        return result
 
 
 class Job(DAG):
@@ -533,28 +537,34 @@ class Job(DAG):
         self.backend.commit_log(self.run_log)
 
 
-    def _serialize(self, include_run_logs=False):
+    def _serialize(self, include_run_logs=False, strict_json=False):
         """ Serialize a representation of this Job to a Python dict object. """
 
         # return tasks in sorted order if graph is in a valid state
         try:
             topo_sorted = self._topological_sort()
-            t = [self.tasks[task]._serialize(include_run_logs=include_run_logs)
+            t = [self.tasks[task]._serialize(include_run_logs=include_run_logs,
+                                             strict_json=strict_json)
                  for task in topo_sorted]
         except:
-            t = [task._serialize(include_run_logs=include_run_logs)
+            t = [task._serialize(include_run_logs=include_run_logs,
+                                 strict_json=strict_json)
                  for task in self.tasks.itervalues()]
 
-        return {'job_id': self.job_id,
-                'name': self.name,
-                'parent_id': self.parent.dagobah_id,
-                'tasks': t,
-                'dependencies': {k: list(v)
-                                 for k, v
-                                 in self.graph.iteritems()},
-                'status': self.state.status,
-                'cron_schedule': self.cron_schedule,
-                'next_run': self.next_run}
+        result = {'job_id': self.job_id,
+                  'name': self.name,
+                  'parent_id': self.parent.dagobah_id,
+                  'tasks': t,
+                  'dependencies': {k: list(v)
+                                   for k, v
+                                   in self.graph.iteritems()},
+                  'status': self.state.status,
+                  'cron_schedule': self.cron_schedule,
+                  'next_run': self.next_run}
+
+        if strict_json:
+            result = json.loads(json.dumps(result, cls=StrictJSONEncoder))
+        return result
 
 
 class Task(object):
@@ -804,7 +814,7 @@ class Task(object):
         self.parent_job._complete_task(self.name, **kwargs)
 
 
-    def _serialize(self, include_run_logs=False):
+    def _serialize(self, include_run_logs=False, strict_json=False):
         """ Serialize a representation of this Task to a Python dict. """
 
         result = {'command': self.command,
@@ -823,4 +833,6 @@ class Task(object):
                 if run_log:
                     result['run_log'] = run_log
 
+        if strict_json:
+            result = json.loads(json.dumps(result, cls=StrictJSONEncoder))
         return result

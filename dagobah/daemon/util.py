@@ -16,20 +16,6 @@ except ImportError:
 from dagobah.core import DagobahError
 
 
-class DagobahEncoder(json.JSONEncoder):
-    def default(self, obj):
-
-        try:
-            if isinstance(obj, ObjectId):
-                return str(obj)
-        except NameError:
-            pass
-
-        if isinstance(obj, datetime) or isinstance(obj, date):
-            return str(obj)
-        return json.JSONEncoder.default(self, obj)
-
-
 def jsonify(*args, **kwargs):
     return Response(json.dumps(dict(*args, **kwargs),
                                cls=DagobahEncoder,
@@ -116,3 +102,9 @@ def validate_dict(in_dict, **kwargs):
                 return False
 
     return True
+
+
+def allowed_file(filename, extensions):
+    return ('.' in filename and
+            filename.rsplit('.', 1)[1].lower() in [ext.lower()
+                                                   for ext in extensions])
