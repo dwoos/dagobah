@@ -21,11 +21,7 @@ from ..backend.sqlite_models import (Base, Dagobah, DagobahJob,
 
 class SQLiteBackend(BaseBackend):
     """ SQLite Backend implementation. """
-    required_packages = [{'pypi_name': 'pysqlite',
-                          'module_name': 'pysqlite2',
-                          'version_key': 'version',
-                          'version': '2.6.0'},
-                         {'pypi_name': 'sqlalchemy',
+    required_packages = [{'pypi_name': 'sqlalchemy',
                           'module_name': 'sqlalchemy',
                           'version_key': '__version__',
                           'version': '0.9.4'},
